@@ -44,8 +44,8 @@ Additionally, a **Streamlit Dashboard** is included to provide a user-friendly i
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/Healthcare-Data-Interoperability-Wrapper.git
-   cd Healthcare-Data-Interoperability-Wrapper
+   git clone https://github.com/ShreyasDasari/FlaskAPI-HL7_FHIR_EMR_to_JSON.git
+   cd FlaskAPI-HL7_FHIR_EMR_to_JSON
    ```
 
 2. Install dependencies:
