@@ -1,247 +1,272 @@
-# FlaskAPI-HL7_FHIR_EMR_to_JSON
+# HealthCare Data Interoperability Wrapper
 
-# Healthcare Data Format Conversion API
+## Overview
 
-This API is designed to convert various healthcare data formats, such as HL7, FHIR, and EMR, into a standardized JSON format. Built using Flask, it automatically detects the format of incoming data and parses it accordingly, enabling easy interoperability between different healthcare systems.
+This **HealthCare Data Interoperability Wrapper** is a Python-based tool designed to standardize healthcare data from various formats into a unified **Custom JSON format**. It seamlessly handles **HL7**, **FHIR**, **EHR** (JSON/XML), and **Plain Text** formats, enabling interoperability between different healthcare systems. 
+
+Additionally, a **Streamlit Dashboard** is included to provide a user-friendly interface for testing and interacting with the API.
+
+---
 
 ## Features
-- **Format Detection**: Identifies HL7, FHIR, and EMR data formats automatically.
-- **Flexible Parsing**: Parses data based on the detected format, converting it into a standardized JSON structure.
-- **Extensible**: Additional formats can be added by extending the `detect_format` and parsing functions.
+
+1. **Multi-format Support**:
+   - **HL7**: Common format used in healthcare messaging.
+   - **FHIR**: Modern standard for healthcare data exchange.
+   - **EHR** (JSON/XML): Electronic Health Records in structured JSON or XML.
+   - **Plain Text**: Simple human-readable data entries.
+
+2. **Custom JSON Output**:
+   - A unified structure that captures essential healthcare data:
+     ```json
+     {
+       "resourceType": "<type>",
+       "text": {"status": "<status>"},
+       "hospital": {"identifier": {"value": "<hospital_name>"}},
+       "person": {
+         "firstName": "<given_name>",
+         "lastName": "<family_name>",
+         "gender": "<gender>",
+         "DOB": "<date_of_birth>",
+         "Vitals": "<vitals_if_present>"
+       },
+       "relatedFields": {<additional_fields>}
+     }
+     ```
+
+3. **Streamlit Dashboard**:
+   - Allows users to input data in various formats.
+   - Displays the converted Custom JSON output interactively.
 
 ---
 
-## Prerequisites
+## Installation
 
-Make sure you have **Python 3.6+** installed on your machine.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/Healthcare-Data-Interoperability-Wrapper.git
+   cd Healthcare-Data-Interoperability-Wrapper
+   ```
 
-### Install Required Libraries
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Use the following command to install the necessary libraries:
+3. Start the Flask API:
+   ```bash
+   python app.py
+   ```
+
+4. Run the Streamlit Dashboard:
+   ```bash
+   streamlit run dashboard.py
+   ```
+
+---
+
+## Usage
+
+### **API Endpoints**
+
+- **POST /convert**
+  - Input: Healthcare data in **HL7**, **FHIR**, **EHR (JSON/XML)**, or **Plain Text** format.
+  - Output: Converted Custom JSON.
+
+#### Example Request:
 ```bash
-pip install Flask hl7 fhir.resources pydantic
+curl -X POST -d '<your_input>' http://127.0.0.1:5000/convert
 ```
 
-- **Flask**: For creating the web API.
-- **hl7**: For parsing HL7 data.
-- **fhir.resources**: For handling FHIR data.
-- **pydantic**: For schema validation in JSON data.
-
 ---
 
-## Getting Started
+## Input Formats and Examples
 
-1. **Clone the Repository**  
-   Download the API code by cloning the repository or copying the code into a new file.
-
-    ```bash
-    git clone <your-repository-url>
-    cd healthcare-data-api
-    ```
-
-2. **Create the API Script**  
-   Save the provided Python code into a file named `app.py` in the repository directory.
-
-3. **Run the API Server**  
-   Start the Flask API server by running:
-
-    ```bash
-    python app.py
-    ```
-
-    By default, the server will run on `http://127.0.0.1:5000`.
-
----
-
-## API Usage
-
-### Endpoint: `/convert`
-- **Method**: `POST`
-- **Description**: Accepts healthcare data in HL7, FHIR, or EMR formats and converts it to a standardized JSON format.
-- **Content-Type**: `text/plain` or `application/json` (for FHIR or EMR data)
-
-### Request Format
-
-Send a POST request to the `/convert` endpoint with the healthcare data in the request body.
-
-### Example Requests
-
-#### 1. HL7 Format
-HL7 messages are sent as plain text. Here’s an example HL7 message:
-
-**HL7 Sample Data**:
+### **1. HL7 Input**
 ```plaintext
-MSH|^~\&|SendingApp|SendingFacility|ReceivingApp|ReceivingFacility|202311111200||ADT^A01|123456|P|2.3
-PID|1||123456^^^Hospital&1.2.3.4.5&ISO||Doe^John||19800101|M|||123 Main St^^City^State^12345||555-1234|||M|Non-Hispanic|123-45-6789
+MSH|^~\&|SendingApp|SendingFacility|ReceivingApp|ReceivingFacility|20241206||ADT^A01|123456|P|2.3
+PID|1||123456^^^HospitalMRN||Doe^John||19800515|M|||123 Main St^^City^ST^12345||(555)123-4567|||S
+OBX|1|NM|Vitals|BP^Blood Pressure|120/80|mmHg|Normal|20241205
 ```
 
-**cURL Request**:
-```bash
-curl -X POST http://127.0.0.1:5000/convert -H "Content-Type: text/plain" -d "MSH|^~\&|SendingApp|SendingFacility|ReceivingApp|ReceivingFacility|202311111200||ADT^A01|123456|P|2.3\nPID|1||123456^^^Hospital&1.2.3.4.5&ISO||Doe^John||19800101|M|||123 Main St^^City^State^12345||555-1234|||M|Non-Hispanic|123-45-6789"
-```
-
-**Expected JSON Output**:
+#### Custom JSON Output
 ```json
 {
-  "format": "HL7",
-  "data": {
-    "MSH": [
-      {
-        "field_0": "MSH",
-        "field_1": "^~\\&",
-        "field_2": "SendingApp",
-        "field_3": "SendingFacility",
-        "field_4": "ReceivingApp",
-        "field_5": "ReceivingFacility",
-        "field_6": "202311111200",
-        "field_8": "ADT^A01",
-        "field_9": "123456",
-        "field_10": "P",
-        "field_11": "2.3"
-      }
-    ],
-    "PID": [
-      {
-        "field_0": "PID",
-        "field_1": "1",
-        "field_3": "123456^^^Hospital&1.2.3.4.5&ISO",
-        "field_5": "Doe^John",
-        "field_7": "19800101",
-        "field_8": "M",
-        "field_10": "123 Main St^^City^State^12345",
-        "field_11": "555-1234",
-        "field_14": "M",
-        "field_15": "Non-Hispanic",
-        "field_16": "123-45-6789"
-      }
-    ]
+  "resourceType": "HL7",
+  "text": {"status": "generated"},
+  "hospital": {"identifier": {"value": "SendingFacility"}},
+  "person": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "gender": "M",
+    "DOB": "1980-05-15",
+    "Vitals": "BP^Blood Pressure|120/80|mmHg|Normal"
+  },
+  "relatedFields": {
+    "MSH": ["..."],
+    "OBX": ["..."]
   }
 }
 ```
 
-#### 2. FHIR Format
+---
 
-FHIR data is usually in JSON format. Here’s an example FHIR JSON object for a patient resource:
-
-**FHIR Sample Data**:
+### **2. FHIR Input**
 ```json
 {
   "resourceType": "Patient",
-  "id": "123",
-  "name": [
-    {
-      "family": "Doe",
-      "given": ["John"]
-    }
-  ],
+  "id": "123456",
+  "text": {"status": "generated"},
+  "name": [{"family": "Doe", "given": ["John"]}],
   "gender": "male",
-  "birthDate": "1980-01-01"
+  "birthDate": "1980-05-15"
 }
 ```
 
-**cURL Request**:
-```bash
-curl -X POST http://127.0.0.1:5000/convert -H "Content-Type: application/json" -d '{"resourceType": "Patient", "id": "123", "name": [{"family": "Doe", "given": ["John"]}], "gender": "male", "birthDate": "1980-01-01"}'
-```
-
-**Expected JSON Output**:
+#### Custom JSON Output
 ```json
 {
-  "format": "FHIR",
-  "data": {
-    "resourceType": "Patient",
-    "id": "123",
-    "name": [
-      {
-        "family": "Doe",
-        "given": ["John"]
-      }
-    ],
-    "gender": "male",
-    "birthDate": "1980-01-01"
-  }
-}
-```
-
-#### 3. EMR Format (Hypothetical)
-
-For EMR data, let’s assume a JSON format with a unique structure. Here’s an example:
-
-**EMR Sample Data**:
-```json
-{
-  "EMRType": "PatientRecord",
-  "patientId": "123",
-  "patientName": {
+  "resourceType": "Patient",
+  "text": {"status": "generated"},
+  "hospital": {"identifier": {"value": "FHIR Hospital"}},
+  "person": {
+    "firstName": "John",
     "lastName": "Doe",
-    "firstName": "John"
+    "gender": "male",
+    "DOB": "1980-05-15",
+    "Vitals": "Normal"
   },
-  "gender": "M",
-  "dob": "1980-01-01",
-  "address": "123 Main St, City, State, 12345"
-}
-```
-
-**cURL Request**:
-```bash
-curl -X POST http://127.0.0.1:5000/convert -H "Content-Type: application/json" -d '{"EMRType": "PatientRecord", "patientId": "123", "patientName": {"lastName": "Doe", "firstName": "John"}, "gender": "M", "dob": "1980-01-01", "address": "123 Main St, City, State, 12345"}'
-```
-
-**Expected JSON Output**:
-```json
-{
-  "format": "EMR",
-  "data": {
-    "EMRType": "PatientRecord",
-    "patientId": "123",
-    "patientName": {
-      "lastName": "Doe",
-      "firstName": "John"
-    },
-    "gender": "M",
-    "dob": "1980-01-01",
-    "address": "123 Main St, City, State, 12345"
+  "relatedFields": {
+    "id": "123456"
   }
 }
 ```
 
 ---
 
-## Adding Support for Additional Formats
-
-To extend this API with more healthcare data formats:
-1. **Update `detect_format` Function**: Add rules to recognize the new format.
-2. **Create a New Parsing Function**: Define a new function to parse the specific data format.
-3. **Integrate Parsing into Endpoint**: Update the `/convert` endpoint to handle the new format.
-
----
-
-## Error Handling
-
-If the data format is unknown, the API returns a 400 error with a message:
+### **3. EHR (JSON) Input**
 ```json
 {
-  "error": "Unknown format"
+  "hospitalName": "General Hospital",
+  "patient": {
+    "patientName": {"given": "John", "family": "Doe"},
+    "gender": "male",
+    "birthDate": "1980-05-15"
+  }
+}
+```
+
+#### Custom JSON Output
+```json
+{
+  "resourceType": "EHR_JSON",
+  "text": {"status": "generated"},
+  "hospital": {"identifier": {"value": "General Hospital"}},
+  "person": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "gender": "male",
+    "DOB": "1980-05-15",
+    "Vitals": "Not Provided"
+  },
+  "relatedFields": {}
 }
 ```
 
 ---
 
-## Example Response for Errors
+### **4. EHR (XML) Input**
+```xml
+<EHR>
+  <hospitalName>General Hospital</hospitalName>
+  <patient>
+    <patientName>
+      <given>John</given>
+      <family>Doe</family>
+    </patientName>
+    <gender>male</gender>
+    <birthDate>1980-05-15</birthDate>
+  </patient>
+</EHR>
+```
 
-If any error occurs during processing, the API returns:
+#### Custom JSON Output
 ```json
 {
-  "error": "Error message here"
+  "resourceType": "EHR_XML",
+  "text": {"status": "generated"},
+  "hospital": {"identifier": {"value": "General Hospital"}},
+  "person": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "gender": "male",
+    "DOB": "1980-05-15",
+    "Vitals": "Not Provided"
+  },
+  "relatedFields": {}
 }
 ```
 
-This ensures that any issues are reported back to the client.
+---
+
+### **5. Plain Text Input**
+```plaintext
+Hospital: General Hospital
+FirstName: John
+LastName: Doe
+Gender: Male
+DOB: 1980-05-15
+Vitals: BP 120/80
+```
+
+#### Custom JSON Output
+```json
+{
+  "resourceType": "PlainText",
+  "text": {"status": "generated"},
+  "hospital": {"identifier": {"value": "General Hospital"}},
+  "person": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "gender": "Male",
+    "DOB": "1980-05-15",
+    "Vitals": "BP 120/80"
+  },
+  "relatedFields": {}
+}
+```
+
+---
+
+## Streamlit Dashboard
+
+The **Streamlit Dashboard** provides an interactive interface to input data in any of the supported formats. It displays the converted **Custom JSON** output.
+
+### Steps:
+1. Run the Streamlit dashboard:
+   ```bash
+   streamlit run dashboard.py
+   ```
+
+2. Open your browser at the displayed URL (usually `http://localhost:8501`).
+
+3. Select the input format (HL7, FHIR, EHR JSON/XML, Plain Text).
+
+4. Enter your input data in the provided text area.
+
+5. Click **Convert** to view the Custom JSON output.
+
+---
+
+## Contributing
+
+Contributions are welcome! If you’d like to improve the tool:
+1. Fork the repository.
+2. Create a feature branch.
+3. Submit a pull request.
 
 ---
 
 ## License
-This project is licensed under the MIT License. 
 
-## Contributions
-Contributions are welcome. Please fork this repository and submit a pull request if you would like to contribute to this project.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
