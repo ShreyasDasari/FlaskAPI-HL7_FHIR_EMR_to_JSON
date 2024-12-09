@@ -106,7 +106,7 @@ def parse_xml(xml_message):
         "lastName": safe_find_text(root, "patient/patientName/family", "Unknown"),
         "gender": safe_find_text(root, "patient/gender", "Unknown"),
         "DOB": safe_find_text(root, "patient/birthDate", "Unknown"),
-        "Vitals": "Not Provided",  # Default value as no vitals field is specified
+        "Vitals": safe_find_text(root, "patient/vitals", "Not Provided")
     }
 
     hospital_value = safe_find_text(root, "hospitalName", "Unknown")
